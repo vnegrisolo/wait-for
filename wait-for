@@ -1,0 +1,41 @@
+#!/bin/sh
+
+log() {
+  echo "[wait-for] [`date +'%Y%m%d%H%M%S'`] $@"
+}
+
+usage() {
+  echo "Usage: `basename "$0"` [--timeout=15] <HOST>:<PORT> [<HOST_2>:<PORT_2>]"
+}
+
+unknown_arg() {
+  log "[ERROR] unknown argument: '$@'"
+  usage
+  exit 1
+}
+
+wait_for() {
+  timeout=$1 && host=$2 && port=$3
+  log "wait '$host':'$port' up to '$timeout'"
+  for i in `seq $timeout` ; do
+    if nc -z "$host" "$port" > /dev/null 2>&1 ; then
+      log "wait finish '$host:$port' [`expr $(date +%s) - $START`] seconds"
+      return 0
+    fi
+    echo "." && sleep 1
+  done
+  log "[ERROR] wait timeout of '$timeout' on '$host:$port'"
+  exit 2
+}
+
+START=$(date +%s)
+timeout=15
+for i in $@ ; do
+  case $i in
+    --timeout=*) timeout="${i#*=}" ;;
+    *:* ) wait_for "$timeout" "${i%%:*}" "${i##*:}" & ;;
+    *) unknown_arg "$i" ;;
+  esac
+done
+wait
+log "wait done"

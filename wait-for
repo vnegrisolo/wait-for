@@ -33,6 +33,7 @@ timeout=15
 for i in $@ ; do
   case $i in
     --timeout=*) timeout="${i#*=}" ;;
+    -t=*) timeout="${i#*=}" ;;
     *:* ) wait_for "$timeout" "${i%%:*}" "${i##*:}" & ;;
     *) unknown_arg "$i" ;;
   esac

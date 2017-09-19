@@ -42,3 +42,33 @@ Setting different timeouts for each host:port:
 - `parallel` => wait for better metrics
 - `log` => some nice log
 - `shell` => doesn't require anything special
+
+## Example of usage:
+
+Here it is a simple example of `docker-compose.yml` file with two services:
+
+```yml
+# docker-compose.yml
+version: "3"
+services:
+  web_dev:
+    build: .
+    command: >
+      sh -c '
+        bin/wait-for pg.dev:5432 &&
+        bundle exec rails server
+      '
+    ports:
+      - "3000:3000"
+    links:
+      - db_dev:pg.dev
+
+  db_dev:
+    image: postgres
+    ports:
+      - "5432:5432"
+```
+
+Note that I used `links` entry to define the host to be used in the linked container.
+
+Also I had to use `sh -c '...'` in order to run multiple shell commands.

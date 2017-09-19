@@ -22,7 +22,8 @@ wait_for() {
       log "wait finish '$host:$port' [`expr $(date +%s) - $START`] seconds"
       return 0
     fi
-    echo "." && sleep 1
+    log "wait attempt '${host}:${port}' [$i]"
+    sleep 1
   done
   log "[ERROR] wait timeout of '$timeout' on '$host:$port'"
   exit 2

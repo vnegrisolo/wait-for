@@ -11,7 +11,7 @@ usage() {
 unknown_arg() {
   log "[ERROR] unknown argument: '$@'"
   usage
-  exit 1
+  exit 2
 }
 
 wait_for() {
@@ -20,24 +20,36 @@ wait_for() {
   for i in `seq $timeout` ; do
     if nc -z "$host" "$port" > /dev/null 2>&1 ; then
       log "wait finish '$host:$port' [`expr $(date +%s) - $START`] seconds"
-      return 0
+      exit 0
     fi
     log "wait attempt '${host}:${port}' [$i]"
     sleep 1
   done
   log "[ERROR] wait timeout of '$timeout' on '$host:$port'"
-  exit 2
+  exit 1
 }
 
 START=$(date +%s)
 timeout=15
+pids=""
 for i in $@ ; do
   case $i in
     --timeout=*) timeout="${i#*=}" ;;
     -t=*) timeout="${i#*=}" ;;
-    *:* ) wait_for "$timeout" "${i%%:*}" "${i##*:}" & ;;
+    *:* )
+      wait_for "$timeout" "${i%%:*}" "${i##*:}" &
+      pids="$pids $!"
+    ;;
     *) unknown_arg "$i" ;;
   esac
 done
-wait
-log "wait done"
+
+status=0
+for pid in $pids; do
+  if ! wait $pid ; then
+    status=1
+  fi
+done
+
+log "wait done with status=$status"
+exit $status

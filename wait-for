@@ -29,6 +29,8 @@ wait_for() {
   exit 1
 }
 
+trap 'kill $(jobs -p) &>/dev/null' EXIT
+
 START=$(date +%s)
 timeout=15
 pids=""
